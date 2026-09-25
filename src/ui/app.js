@@ -2,10 +2,10 @@
  * Workspace controller: editor ⇄ engine ⇄ views ⇄ insights.
  * Text is the source of truth; every visual edit becomes a text edit (undoable with Ctrl+Z).
  */
-import { h, frag, qs, qsa, debounce } from '../core/dom.js';
+import { h, qs, qsa, debounce } from '../core/dom.js';
 import { state, subscribe, getPlan, getWeek, setText, setWeekText, setUI, dayRecord, markBlock, today } from '../core/store.js';
 import { editPlan } from '../engine/plan.js';
-import { fmtTime, fmtDateLong, addDays, parseDateKey, dateKey, minutesOfDay, fmtDuration, WEEKDAYS_LONG } from '../engine/time.js';
+import { fmtTime, addDays, parseDateKey, dateKey, minutesOfDay, fmtDuration, WEEKDAYS_LONG } from '../engine/time.js';
 import { routineFor } from '../engine/week.js';
 import { createEditor } from './editor.js';
 import { renderTimeline } from './timeline.js';
@@ -165,7 +165,7 @@ function refresh(force = false) {
   els.dayLabel.innerHTML = '';
   els.dayLabel.append(
     h('small', { text: week ? 'weekly routine' : isToday ? 'today' : tomorrow ? 'tomorrow' : WEEKDAYS_LONG[(d.getDay() + 6) % 7] }),
-    document.createTextNode(week ? 'Week timetable' : fmtDateLong(state.ui.date).replace(/^\w+, /, '')),
+    document.createTextNode(week ? 'Week timetable' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long' }) + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '')),
   );
   els.title.textContent = week ? 'Your week' : isToday ? 'Your day' : 'Plan · ' + d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
   qs('#view-seg').style.display = week ? 'none' : '';

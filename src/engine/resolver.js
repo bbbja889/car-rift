@@ -72,7 +72,11 @@ function startCost(x, ctx, entry, atom, candidateExplicit) {
   } else {
     const d = x - ctx.cursor;
     if (d >= -TOL) cost = d >= 0 ? d : -d * 3;
-    else cost = OUT_OF_ORDER + (-d) / 4;
+    else if (mod(x, DAY) >= 300 && ctx.prevCategory !== 'sleep') {
+      // an item appended out of order ("…5 to 7 pm call, subah 7 baje gym") stays on the same day;
+      // only early hours or times right after sleep roll over to tomorrow
+      cost = 300 + (-d) / 8;
+    } else cost = OUT_OF_ORDER + (-d) / 4;
   }
   return cost + timePenalty(entry.title, entry.category, x);
 }
@@ -190,6 +194,7 @@ export function resolve(entries, opts = {}) {
       const guessed = !chosen.explicit && !endExplicit;
       const block = { id: makeId(entry.title), ...common, kind: 'fixed', start: chosen.x, end, guessed, point: end == null };
       fixed.push(block);
+      ctx.prevCategory = info.id;
       if (end == null) {
         ctx.cursor = chosen.x;
         pendingPoint = block;

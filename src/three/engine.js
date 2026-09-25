@@ -565,6 +565,7 @@ export class Engine {
   }
 
   update(dt, { reduced = false } = {}) {
+    dt = Math.max(0, dt || 0);
     this.time += dt;
     const t = this.time;
     this.pUniforms.uTime.value = t;

@@ -93,18 +93,23 @@ export function renderDayGrid(root, plan, { clock, onChange, onCreate, onSelect,
     if (!el || e.button !== 0) return;
     const b = blocks.find((x) => x.id === el.dataset.id);
     if (!b) return;
-    onSelect && onSelect(b, { scroll: false });
-    if (b.readOnly) return;
     e.preventDefault();
-    el.setPointerCapture(e.pointerId);
-    drag = { b, el, mode: e.target.dataset.resize ? 'resize' : 'move', y0: e.clientY, start: b.start, end: b.end, moved: false };
-    el.classList.add('dragging');
-    lane.appendChild(tip);
+    try {
+      el.setPointerCapture(e.pointerId);
+    } catch {
+      /* fall back to lane-level move events */
+    }
+    drag = { b, el, mode: e.target.dataset.resize ? 'resize' : 'move', y0: e.clientY, start: b.start, end: b.end, moved: false, ro: !!b.readOnly };
+    if (!b.readOnly) {
+      el.classList.add('dragging');
+      lane.appendChild(tip);
+    }
   });
   lane.addEventListener('pointermove', (e) => {
-    if (!drag) return;
+    if (!drag || drag.ro) return;
     const dm = (e.clientY - drag.y0) / ppm;
-    if (Math.abs(dm) > 2) drag.moved = true;
+    if (Math.abs(e.clientY - drag.y0) > 3) drag.moved = true;
+    if (!drag.moved) return;
     const len = drag.b.end - drag.b.start;
     if (drag.mode === 'move') {
       drag.start = snap(drag.b.start + dm);
@@ -124,7 +129,8 @@ export function renderDayGrid(root, plan, { clock, onChange, onCreate, onSelect,
     drag = null;
     d.el.classList.remove('dragging');
     tip.remove();
-    if (d.moved && (d.start !== d.b.start || d.end !== d.b.end)) onChange({ type: 'move', id: d.b.id, start: d.start, end: d.end });
+    if (!d.moved) onSelect && onSelect(d.b, { scroll: false });
+    else if (d.start !== d.b.start || d.end !== d.b.end) onChange({ type: 'move', id: d.b.id, start: d.start, end: d.end });
   };
   lane.addEventListener('pointerup', end);
   lane.addEventListener('pointercancel', end);

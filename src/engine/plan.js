@@ -62,10 +62,6 @@ export function nowState(plan, minute) {
 /* Editing                                                             */
 /* ------------------------------------------------------------------ */
 
-function entryOf(plan, block) {
-  return plan.entries.find((e) => e.s === block.srcS && e.e === block.srcE) || null;
-}
-
 /**
  * Apply visual changes to the text.
  * change types:

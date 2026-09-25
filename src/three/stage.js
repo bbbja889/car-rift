@@ -277,7 +277,7 @@ export function createStage(canvas) {
       last = t;
       return;
     }
-    const realDt = (t - last) / 1000;
+    const realDt = Math.max(0, (t - last) / 1000);
     const dt = Math.min(0.1, realDt);
     last = t;
     const reduced = prefersReducedMotion();
@@ -298,7 +298,7 @@ export function createStage(canvas) {
       state.director(dt);
     } else if (state.mode === 'hero' || state.mode === 'focus') {
       const k = state.mode === 'focus'
-        ? { pos: V(0, 0, -6), rot: V(-0.1, 0, 0), scale: 1.25, dim: 0.28, cam: V(0, 0, 17), tgt: V(0, 0, 0), colA: new THREE.Color('#00e5ff'), colB: new THREE.Color('#8b5cf6') }
+        ? { pos: V(2, -1, -18), rot: V(-0.5, -0.3, 0.2), scale: 1.6, dim: 0.16, cam: V(0, 0, 17), tgt: V(0, 0, 0), colA: new THREE.Color('#00e5ff'), colB: new THREE.Color('#8b5cf6') }
         : heroTargets();
       const lam = reduced ? 30 : 2.6;
       state.mouse.sx = damp(state.mouse.sx, reduced ? 0 : state.mouse.x, 3, dt);

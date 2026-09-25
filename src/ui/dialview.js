@@ -46,7 +46,11 @@ export function mountDialView(container, { clock = '12h', onSelect } = {}) {
     moved = false;
     lx = e.clientX;
     ly = e.clientY;
-    canvas.setPointerCapture(e.pointerId);
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch {
+      /* synthetic or already-released pointer */
+    }
   };
   const onMove = (e) => {
     if (dragging) {
@@ -79,7 +83,6 @@ export function mountDialView(container, { clock = '12h', onSelect } = {}) {
 
   const ray = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
-  let hovered = null;
   let selectedId = null;
   let plan = null;
 
@@ -92,7 +95,6 @@ export function mountDialView(container, { clock = '12h', onSelect } = {}) {
   }
   function hover(e) {
     const b = dragging ? null : pick(e);
-    hovered = b;
     canvas.style.cursor = b ? 'pointer' : dragging ? 'grabbing' : 'grab';
     if (b) {
       const r = canvas.getBoundingClientRect();
@@ -148,7 +150,7 @@ export function mountDialView(container, { clock = '12h', onSelect } = {}) {
   function frame(t) {
     if (!running) return;
     requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (t - last) / 1000);
+    const dt = Math.max(0, Math.min(0.05, (t - last) / 1000));
     last = t;
     if (document.hidden) return;
     if (!dragging && !reduced) orbit.tTheta += dt * 0.03;
@@ -175,6 +177,7 @@ export function mountDialView(container, { clock = '12h', onSelect } = {}) {
     renderer.render(scene, camera);
   }
   requestAnimationFrame(frame);
+  if (/[?&]debug\b/.test(location.search)) window.__dial = { camera, engine, orbit };
 
   return {
     update(p, selected) {

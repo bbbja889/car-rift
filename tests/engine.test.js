@@ -99,3 +99,24 @@ test('editPlan add + split', () => {
   const { text: t2 } = editPlan('9 to 10 study', [{ type: 'add', title: 'walk', start: 1080, end: 1100 }], {});
   assert.ok(rows(t2).includes('18:00-18:20 walk'), t2);
 });
+
+test('clash fix moves into a slot that really fits', () => {
+  const plan = buildPlan({ text: '3:50 to 5 pm : work\n5 to 7 pm : call\n4:30 standup', settings: { fromNow: false } });
+  const ins = plan.analysis.insights.find((i) => i.level === 'critical');
+  assert.ok(ins.fix);
+  assert.equal(ins.fix.start, 19 * 60); // after the call, not 5 PM (which would clash again)
+});
+
+test('items appended out of order stay on the same day', () => {
+  assert.deepEqual(rows('3:50 to 5 pm : work\n5 to 7 pm : call\nsubah 7 baje gym\n4:30 standup'), [
+    '07:00-08:00 gym',
+    '15:50-17:00 work',
+    '16:30-17:00 standup',
+    '17:00-19:00 call',
+  ]);
+  assert.deepEqual(rows('5pm gym, 9am work'), ['09:00-10:00 work', '17:00-18:00 gym']);
+});
+
+test('after sleep, the morning is tomorrow', () => {
+  assert.deepEqual(rows('11pm sleep, 7am wake up'), ['23:00-07:00+ sleep', '07:00+-07:20+ wake up']);
+});

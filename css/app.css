@@ -270,6 +270,7 @@
   .app-top { gap: 10px; }
   .app-actions { margin-left: 0; width: 100%; }
   .app-actions .btn { flex: 1; padding: 0 8px; }
+  .app-actions #btn-settings { flex: 0 0 44px; }
   .export-grid { grid-template-columns: 1fr; }
   .tl { padding-left: 64px; }
   .tl::before { left: 50px; }

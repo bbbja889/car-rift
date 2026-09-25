@@ -129,6 +129,15 @@ export function analyze({ blocks, unplaced = [], settings = {}, window = null })
       overlapCount++;
       const movable = !b.readOnly ? b : !a.readOnly ? a : null;
       const anchor = movable === b ? a : b;
+      // first free slot after the anchor that fits the moved block (ignoring the block itself)
+      let slotStart = anchor.end;
+      if (movable) {
+        const others = sorted.filter((x) => x !== movable && x.kind !== 'auto').map((x) => [x.start, x.end]); // auto blocks reflow
+        const len = dur(movable);
+        const free = freeIntervals(others, anchor.end, Math.max(anchor.end + len, (window?.end ?? 1380) + 180), 0);
+        const fit = free.find(([fa, fb]) => fb - fa >= len);
+        if (fit) slotStart = fit[0];
+      }
       add({
         id: 'overlap:' + a.id + ':' + b.id,
         level: 'critical',
@@ -142,10 +151,10 @@ export function analyze({ blocks, unplaced = [], settings = {}, window = null })
         fix: movable
           ? {
             type: 'move',
-            label: { en: 'Move “' + movable.title + '” after', hi: '“' + movable.title + '” ko baad mein shift karo' },
+            label: { en: 'Move “' + movable.title + '” to ' + fmtTime(slotStart), hi: '“' + movable.title + '” ko ' + fmtTime(slotStart) + ' pe shift karo' },
             id: movable.id,
-            start: movable === b ? anchor.end : anchor.end,
-            end: anchor.end + dur(movable),
+            start: slotStart,
+            end: slotStart + dur(movable),
           }
           : null,
       });
