@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en" data-route="landing">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KYPZER — Time Engine</title>
+<meta name="description" content="Type your day like a text message — English or Hinglish. KYPZER turns it into a realistic, calendar-ready plan: conflicts caught, breaks protected, energy-aware, private and offline.">
+<meta name="theme-color" content="#06080f">
+<meta name="color-scheme" content="dark">
+<meta property="og:title" content="KYPZER — Your day, engineered.">
+<meta property="og:description" content="Your day has 1,440 minutes. Type it like a text; get a plan that actually fits.">
+<meta property="og:image" content="assets/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/intro.css">
+<link rel="stylesheet" href="css/landing.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/focus.css">
+<link rel="stylesheet" href="css/print.css" media="print">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }
+</script>
+<script>
+  // Before paint: motion preference + first-visit flag + file:// guard.
+  (function () {
+    var d = document.documentElement;
+    try {
+      var s = JSON.parse(localStorage.getItem('kypzer.v2') || '{}');
+      if (s.settings && s.settings.motion && s.settings.motion !== 'auto') d.dataset.motion = s.settings.motion;
+      if (!(s.meta && s.meta.seenIntro)) d.classList.add('first-visit');
+    } catch (e) { d.classList.add('first-visit'); }
+    if (location.protocol === 'file:') d.classList.add('is-file');
+    d.classList.add('js');
+  })();
+</script>
+</head>
+<body>
+
+<!-- persistent 3D stage + atmosphere -->
+<canvas id="stage" aria-hidden="true"></canvas>
+<div class="atmo" aria-hidden="true"><div class="atmo-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+<div class="grain" aria-hidden="true"></div>
+<div id="cursor" aria-hidden="true"><div class="cursor-dot"></div><div class="cursor-ring"></div></div>
+
+<!-- file:// guard -->
+<div class="file-guard" role="alert">
+  <div class="panel">
+    <h2>Serve me, don’t double-click me</h2>
+    <p>KYPZER v2 uses modern JavaScript modules, which browsers block on <code>file://</code>. From this folder run one of:</p>
+    <pre>npx serve .        # or
+python -m http.server 5173</pre>
+    <p>then open <code>http://localhost:5173</code>. (It also works on GitHub Pages as-is.)</p>
+  </div>
+</div>
+
+<!-- ============ INTRO ============ -->
+<div id="gate" class="gate" hidden>
+  <div class="gate-core" aria-hidden="true"><span></span></div>
+  <p class="gate-label mono">KYPZER ENGINE <span class="dim">//</span> <span id="gate-status">WARMING UP</span></p>
+  <div class="gate-bar" aria-hidden="true"><i id="gate-progress"></i></div>
+  <div class="gate-actions">
+    <button class="btn btn-primary magnetic" id="enter-sound" disabled><span>Enter with sound</span></button>
+    <button class="btn btn-ghost" id="enter-silent" disabled>Enter silently</button>
+  </div>
+  <p class="gate-hint mono">best with headphones · <kbd>Esc</kbd> skips the film</p>
+</div>
+
+<div id="intro-ui" class="intro-ui" hidden aria-live="polite">
+  <p class="intro-line mono" id="intro-boot"></p>
+  <div class="intro-caption" id="intro-caption"></div>
+  <div class="intro-title" id="intro-title">
+    <div class="intro-logo" aria-label="KYPZER"></div>
+    <div class="intro-tag">Your day, <em>engineered.</em></div>
+    <div class="intro-underline"></div>
+    <div class="dev-chip"><span class="pulse-dot"></span>dev : yashraj ghemud</div>
+  </div>
+  <div class="intro-sync" id="intro-sync"></div>
+  <button class="skip-intro mono" id="skip-intro">skip intro <kbd>Esc</kbd></button>
+  <div class="letterbox top"></div><div class="letterbox bottom"></div>
+  <div class="flash" id="intro-flash"></div>
+</div>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <a class="skip-link" href="#/app">Skip to planner</a>
+  <a class="brand" href="#/" aria-label="KYPZER home">
+    <span class="brand-mark" aria-hidden="true"><i></i></span>
+    <span class="brand-name">KYPZER</span>
+  </a>
+  <nav class="nav-links" aria-label="Main">
+    <a href="#/" data-nav="landing">Engine</a>
+    <a href="#/app" data-nav="app">Planner</a>
+    <a href="#/focus" data-nav="focus">Focus</a>
+  </nav>
+  <div class="nav-right">
+    <span class="nav-clock mono" id="nav-clock" aria-label="Current time"></span>
+    <button class="icon-btn" id="btn-sound" aria-label="Toggle sound" title="Sound"></button>
+    <button class="icon-btn" id="btn-palette" aria-label="Command palette (Ctrl+K)" title="Command palette  Ctrl K"></button>
+    <a class="btn btn-primary btn-sm nav-cta magnetic" href="#/app"><span>Plan my day</span></a>
+  </div>
+</header>
+
+<!-- ============ LANDING ============ -->
+<main id="view-landing" class="view" data-view="landing">
+  <section class="hero" id="hero">
+    <div class="hero-copy">
+      <div class="eyebrow"><span class="chip chip-live"><span class="pulse-dot"></span>dev : yashraj ghemud</span><span class="chip mono">TIME ENGINE v2</span></div>
+      <h1 class="hero-title reveal-lines">
+        <span class="line"><span>Your day has</span></span>
+        <span class="line"><span><b class="num" id="hero-num">1,440</b> minutes.</span></span>
+      </h1>
+      <p class="hero-sub reveal-up">Type it like a text message — English or Hinglish. The Kypzer engine turns it into a plan that actually fits: clashes caught, breaks protected, energy-aware, and one tap from your calendar.</p>
+      <form class="command" id="hero-command" autocomplete="off">
+        <span class="command-prompt mono" aria-hidden="true">›</span>
+        <label class="sr-only" for="hero-input">Type your day</label>
+        <input id="hero-input" type="text" spellcheck="false" placeholder="3:50 to 5 pm : work, subah 7 baje gym, study 2h">
+        <button class="btn btn-primary magnetic" type="submit"><span>Engineer it</span><kbd>⏎</kbd></button>
+      </form>
+      <div class="hero-meta mono">
+        <span id="hero-now">—</span>
+        <span class="dot-sep"></span>
+        <span><b id="hero-left">—</b> minutes left today</span>
+      </div>
+    </div>
+    <div class="hero-scroll mono" aria-hidden="true"><span></span>scroll</div>
+  </section>
+
+  <section class="sec demo" id="sec-demo" data-theme="cyan">
+    <div class="demo-sticky">
+      <div class="sec-head">
+        <p class="kicker mono">01 / LANGUAGE</p>
+        <h2 class="reveal-lines"><span class="line"><span>Type it like</span></span><span class="line"><span>you text it.</span></span></h2>
+        <p class="lede">Times, ranges, durations, deadlines, “then”, even <em>sadhe 3 se 5 baje tak</em>. It highlights exactly what it understood — and marks its guesses so you can flip them.</p>
+      </div>
+      <div class="demo-stage" aria-hidden="true">
+        <div class="demo-editor glass">
+          <div class="win-bar"><i></i><i></i><i></i><span class="mono">today.kypzer</span></div>
+          <pre class="demo-code mono" id="demo-code"></pre>
+        </div>
+        <div class="demo-timeline" id="demo-timeline" aria-hidden="true"></div>
+      </div>
+      <div class="demo-progress" aria-hidden="true"><i id="demo-progress"></i></div>
+    </div>
+  </section>
+
+  <section class="sec thinks" id="sec-thinks" data-theme="violet">
+    <div class="sec-head center">
+      <p class="kicker mono">02 / THE ENGINE THINKS</p>
+      <h2 class="reveal-lines"><span class="line"><span>A plan you can</span></span><span class="line"><span>actually live.</span></span></h2>
+    </div>
+    <div class="cards3">
+      <article class="tcard tilt reveal-up">
+        <div class="illo illo-clash" aria-hidden="true"><i class="a"></i><i class="b"></i><span class="spark"></span></div>
+        <h3>Catches clashes</h3>
+        <p>Two things at 4 PM? It flags the overlap and moves the later block after the first — one tap.</p>
+      </article>
+      <article class="tcard tilt reveal-up">
+        <div class="illo illo-split" aria-hidden="true"><i class="a"></i><i class="brk"></i><i class="b"></i></div>
+        <h3>Protects your breaks</h3>
+        <p>Four hours of back-to-back focus quietly wrecks the afternoon. It suggests a 10-minute reset at the right moment.</p>
+      </article>
+      <article class="tcard tilt reveal-up">
+        <div class="illo illo-energy" aria-hidden="true"><svg viewBox="0 0 200 70"><path d="M0 55 C30 55 35 12 60 12 S90 45 110 45 S140 20 160 22 S190 50 200 55"/></svg><i class="blk"></i></div>
+        <h3>Knows your energy</h3>
+        <p>Early bird or night owl — flexible tasks like <code>study 2h</code> land in your peak window, not your post-lunch slump.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec rings-sec" id="sec-rings" data-theme="rose">
+    <div class="split">
+      <div class="rings-visual reveal-up" id="landing-rings" aria-hidden="true"></div>
+      <div>
+        <p class="kicker mono">03 / DAY SCORE</p>
+        <h2 class="reveal-lines"><span class="line"><span>Three rings that</span></span><span class="line"><span>mean something.</span></span></h2>
+        <ul class="ring-legend">
+          <li><b class="c-cyan">Focus</b> deep work planned where your energy is — without marathons.</li>
+          <li><b class="c-violet">Recovery</b> breaks per busy hour, meals and sleep.</li>
+          <li><b class="c-rose">Balance</b> body, people and mind — not just work.</li>
+        </ul>
+        <p class="lede small">Clashes and overload pull the total down. Every warning comes with a reason, and most come with a fix.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec live-sec" id="sec-live" data-theme="cyan">
+    <div class="split rev">
+      <div>
+        <p class="kicker mono">04 / LIVE MODE</p>
+        <h2 class="reveal-lines"><span class="line"><span>Plans break.</span></span><span class="line"><span>Yours bends.</span></span></h2>
+        <p class="lede">Focus mode counts down the block you’re in, whispers what’s next, keeps your screen awake and plays synthesized rain if you want it. Running late? <b>One tap shifts the rest of your day.</b></p>
+        <div class="late-demo reveal-up" id="late-demo" aria-hidden="true">
+          <div class="ld-row"><span class="mono">4:00</span><i style="--c:#00e5ff">work</i></div>
+          <div class="ld-row"><span class="mono">5:00</span><i style="--c:#3ecf8e">gym</i></div>
+          <div class="ld-row"><span class="mono">6:30</span><i style="--c:#e06cd6">call</i></div>
+          <button class="chip mono" tabindex="-1">+15 min · running late</button>
+        </div>
+      </div>
+      <div class="focus-demo reveal-up" aria-hidden="true">
+        <svg viewBox="0 0 220 220" class="focus-ring-demo"><circle cx="110" cy="110" r="96" class="track"/><circle cx="110" cy="110" r="96" class="prog" id="focus-demo-prog"/></svg>
+        <div class="fd-center"><span class="mono small dim">NOW · WORK</span><b class="mono" id="focus-demo-time">42:17</b><span class="small dim">next: gym at 5:00 PM</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec everywhere" id="sec-everywhere" data-theme="violet">
+    <div class="sec-head center">
+      <p class="kicker mono">05 / TAKES IT EVERYWHERE</p>
+      <h2 class="reveal-lines"><span class="line"><span>Out of the browser,</span></span><span class="line"><span>into your life.</span></span></h2>
+    </div>
+    <div class="fan" id="fan">
+      <article class="fcard reveal-up"><div class="fc-ic"><i data-icon="image"></i></div><h3>Story cards</h3><p>Crisp 9:16, square or wide images for WhatsApp status — no screenshots.</p></article>
+      <article class="fcard reveal-up"><div class="fc-ic"><i data-icon="calendar"></i></div><h3>Calendar (.ics)</h3><p>Google, Apple, Outlook. Week timetables export as <em>recurring</em> events with reminders.</p></article>
+      <article class="fcard reveal-up"><div class="fc-ic"><i data-icon="qr"></i></div><h3>Link + QR</h3><p>Plan on the laptop, scan, run Focus on your phone. The plan lives inside the link — no server.</p></article>
+      <article class="fcard reveal-up"><div class="fc-ic"><i data-icon="text"></i></div><h3>Text & print</h3><p>WhatsApp-ready text with emojis, and a clean A4 printout for the fridge.</p></article>
+    </div>
+  </section>
+
+  <section class="sec week-sec" id="sec-week" data-theme="rose">
+    <div class="split">
+      <div>
+        <p class="kicker mono">06 / WEEK MODE</p>
+        <h2 class="reveal-lines"><span class="line"><span>Set your timetable</span></span><span class="line"><span>once.</span></span></h2>
+        <p class="lede">Write <code>mon-fri 9 to 10am : maths</code> or <code>somvar 5pm tuition</code>. Get a weekly grid, recurring calendar events — and your classes appear in every day plan automatically.</p>
+      </div>
+      <div class="week-demo reveal-up" id="week-demo" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <section class="sec private-sec" id="sec-private" data-theme="cyan">
+    <div class="sec-head center">
+      <p class="kicker mono">07 / PRIVATE BY DESIGN</p>
+      <h2 class="reveal-lines"><span class="line"><span>No account. No server.</span></span><span class="line"><span>Your day stays yours.</span></span></h2>
+    </div>
+    <div class="pills reveal-up">
+      <span class="pill"><i data-icon="lock"></i> Stored only in your browser</span>
+      <span class="pill"><i data-icon="wifi"></i> Works offline (installable app)</span>
+      <span class="pill"><i data-icon="download"></i> One-click backup &amp; restore</span>
+      <span class="pill"><i data-icon="eye"></i> No tracking, no ads</span>
+    </div>
+  </section>
+
+  <section class="sec final" id="sec-final">
+    <h2 class="final-title reveal-lines"><span class="line"><span>1,440 minutes a day.</span></span><span class="line"><span class="grad">Start with the next one.</span></span></h2>
+    <a class="btn btn-primary btn-lg magnetic" href="#/app"><span>Open the planner</span></a>
+  </section>
+
+  <footer class="site-footer mono">
+    <span>built with <b>kypzer</b> · dev : yashraj ghemud</span>
+    <span class="dim">powered by the kypzer engine · v2.0</span>
+    <button class="linklike" id="replay-intro">replay intro</button>
+  </footer>
+</main>
+
+<!-- ============ APP ============ -->
+<main id="view-app" class="view" data-view="app" hidden>
+  <h1 class="sr-only">KYPZER planner</h1>
+  <div class="app-top">
+    <div class="date-nav">
+      <button class="icon-btn" id="day-prev" aria-label="Previous day"></button>
+      <button class="date-label" id="day-label" title="Jump to today"></button>
+      <button class="icon-btn" id="day-next" aria-label="Next day"></button>
+    </div>
+    <div class="seg" role="tablist" aria-label="Planner mode" id="mode-seg">
+      <button role="tab" data-mode="day" aria-selected="true">Day</button>
+      <button role="tab" data-mode="week" aria-selected="false">Week</button>
+    </div>
+    <div class="app-actions">
+      <button class="btn btn-ghost btn-sm" id="btn-history"></button>
+      <button class="btn btn-ghost btn-sm" id="btn-export"></button>
+      <button class="btn btn-ghost btn-sm" id="btn-settings" aria-label="Settings"></button>
+      <a class="btn btn-primary btn-sm magnetic" href="#/focus" id="btn-focus"><span>Focus</span></a>
+    </div>
+  </div>
+
+  <div class="workspace" id="main-app" tabindex="-1">
+    <section class="pane pane-editor" aria-label="Plan editor">
+      <div class="pane-head">
+        <h2 class="pane-title" id="editor-title">Your day</h2>
+        <div class="pane-tools">
+          <button class="icon-btn" id="btn-voice" aria-label="Voice input" title="Speak your day" hidden></button>
+          <div class="dropdown" id="tpl-dd">
+            <button class="btn btn-ghost btn-xs" id="btn-templates" aria-haspopup="menu">Templates</button>
+          </div>
+        </div>
+      </div>
+      <div class="editor" id="editor"></div>
+      <div class="understood" id="understood" aria-label="What the engine understood"></div>
+      <div class="unplaced" id="unplaced"></div>
+      <p class="hint small">Format flexible hai — <code>3 to 5 pm : work</code>, <code>gym 6-7am</code>, <code>lunch at 1 for 45m</code>, <code>study 2h</code>, <code>report 1h before 6pm !</code>, <code>subah 7 baje walk</code>. <kbd>Ctrl</kbd>+<kbd>K</kbd> for everything else.</p>
+    </section>
+
+    <section class="pane pane-view" aria-label="Plan view">
+      <div class="pane-head">
+        <div class="seg seg-sm" role="tablist" aria-label="View" id="view-seg">
+          <button role="tab" data-view="timeline" aria-selected="true">Timeline</button>
+          <button role="tab" data-view="grid" aria-selected="false">Grid</button>
+          <button role="tab" data-view="dial" aria-selected="false">Dial 3D</button>
+        </div>
+        <div class="progress-chip mono" id="day-progress"></div>
+      </div>
+      <div class="view-body" id="view-body"></div>
+    </section>
+
+    <aside class="pane pane-insights" aria-label="Insights">
+      <div class="score-card" id="score-card"></div>
+      <div class="insights" id="insights"></div>
+      <div class="stats" id="stats"></div>
+      <div class="breakdown" id="breakdown"></div>
+      <div class="energy" id="energy"></div>
+    </aside>
+  </div>
+  <nav class="mobile-tabs" id="mobile-tabs" aria-label="Sections">
+    <button data-pane="editor" class="on">Plan</button>
+    <button data-pane="view">View</button>
+    <button data-pane="insights">Insights</button>
+  </nav>
+</main>
+
+<!-- ============ FOCUS ============ -->
+<main id="view-focus" class="view" data-view="focus" hidden>
+  <div class="focus" id="focus"></div>
+</main>
+
+<!-- ============ SHARED ============ -->
+<main id="view-share" class="view" data-view="share" hidden>
+  <div class="shared" id="shared"></div>
+</main>
+
+<div id="wipe" aria-hidden="true"><i class="hand"></i></div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="modal-root"></div>
+<div id="palette-root"></div>
+
+<noscript><div class="noscript">KYPZER needs JavaScript to engineer your day.</div></noscript>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
