@@ -42,7 +42,6 @@
 </script>
 </head>
 <body>
-<a class="skip-link" href="#main-app">Skip to planner</a>
 
 <!-- persistent 3D stage + atmosphere -->
 <canvas id="stage" aria-hidden="true"></canvas>
@@ -90,6 +89,7 @@ python -m http.server 5173</pre>
 
 <!-- ============ NAV ============ -->
 <header class="nav" id="nav">
+  <a class="skip-link" href="#/app">Skip to planner</a>
   <a class="brand" href="#/" aria-label="KYPZER home">
     <span class="brand-mark" aria-hidden="true"><i></i></span>
     <span class="brand-name">KYPZER</span>
@@ -139,10 +139,10 @@ python -m http.server 5173</pre>
         <h2 class="reveal-lines"><span class="line"><span>Type it like</span></span><span class="line"><span>you text it.</span></span></h2>
         <p class="lede">Times, ranges, durations, deadlines, “then”, even <em>sadhe 3 se 5 baje tak</em>. It highlights exactly what it understood — and marks its guesses so you can flip them.</p>
       </div>
-      <div class="demo-stage">
+      <div class="demo-stage" aria-hidden="true">
         <div class="demo-editor glass">
           <div class="win-bar"><i></i><i></i><i></i><span class="mono">today.kypzer</span></div>
-          <pre class="demo-code mono" id="demo-code" aria-label="Example plan being typed"></pre>
+          <pre class="demo-code mono" id="demo-code"></pre>
         </div>
         <div class="demo-timeline" id="demo-timeline" aria-hidden="true"></div>
       </div>
@@ -261,6 +261,7 @@ python -m http.server 5173</pre>
 
 <!-- ============ APP ============ -->
 <main id="view-app" class="view" data-view="app" hidden>
+  <h1 class="sr-only">KYPZER planner</h1>
   <div class="app-top">
     <div class="date-nav">
       <button class="icon-btn" id="day-prev" aria-label="Previous day"></button>

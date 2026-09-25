@@ -23,7 +23,7 @@ export function renderTimeline(root, plan, opts) {
   const items = timelineItems(plan);
   items.forEach((it, idx) => {
     if (!nowPlaced && it.start > now) {
-      list.appendChild(h('div.tl-nowline', { 'aria-label': 'Now' }, h('span', { text: fmtTime(now, clock).replace(/ [AP]M$/, '') })));
+      list.appendChild(h('div.tl-nowline', { role: 'listitem', 'aria-label': 'Now, ' + fmtTime(now, clock) }, h('span', { text: fmtTime(now, clock).replace(/ [AP]M$/, '') })));
       nowPlaced = true;
     }
     if (it.type === 'gap') {
@@ -98,7 +98,7 @@ export function renderTimeline(root, plan, opts) {
     list.appendChild(item);
   });
   if (!nowPlaced && now != null && items.length) {
-    list.appendChild(h('div.tl-nowline', h('span', { text: fmtTime(now, clock).replace(/ [AP]M$/, '') })));
+    list.appendChild(h('div.tl-nowline', { role: 'listitem', 'aria-label': 'Now, ' + fmtTime(now, clock) }, h('span', { text: fmtTime(now, clock).replace(/ [AP]M$/, '') })));
   }
   root.replaceChildren(list);
   flipPlay(root, before);

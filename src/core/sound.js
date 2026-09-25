@@ -213,7 +213,7 @@ export const cue = {
   },
   shimmer(t) {
     if (!isEnabled()) return;
-    [4, 5, 7, 8].forEach((n, i) => tone(PENTA[n] * 2, { t: t + i * 0.06, d: 2.4, peak: 0.03, wet: 0.9 }));
+    [3, 4, 6, 7].forEach((n, i) => tone(PENTA[n] * 2, { t: t + i * 0.06, d: 2.4, peak: 0.03, wet: 0.9 }));
   },
   pad(t, dur = 5) {
     if (!isEnabled()) return;

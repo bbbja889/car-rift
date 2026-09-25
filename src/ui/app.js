@@ -16,6 +16,7 @@ import { icon } from './icons.js';
 import { toast } from './toast.js';
 import { DAY_TEMPLATES, WEEK_TEMPLATES } from './templates.js';
 import * as sound from '../core/sound.js';
+import { burstFrom } from './fx.js';
 
 let editor = null;
 let mounted = false;
@@ -292,6 +293,7 @@ function renderView(plan, full) {
       selected: state.ui.selected,
       onSelect: (b) => selectBlock(b, { scroll: false }),
       onToggle: (b, status) => {
+        if (status === 'done') burstFrom(els.viewBody.querySelector(`[data-key="${CSS.escape(b.id)}"] .tl-check`), b.color);
         markBlock(state.ui.date, b.id, status);
         if (status === 'done') {
           sound.ui('done');

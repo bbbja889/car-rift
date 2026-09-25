@@ -11,6 +11,7 @@ import { toast } from './toast.js';
 import { fmtTime, fmtDuration, minutesOfDay } from '../engine/time.js';
 import { nowState } from '../engine/plan.js';
 import * as sound from '../core/sound.js';
+import { tickBurst } from './fx.js';
 
 let root = null;
 let timer = 0;
@@ -163,6 +164,8 @@ async function doneCurrent() {
   const { current } = nowState(plan, nowM);
   if (!current.length) return;
   markBlock(today(), current[0].id, 'done');
+  const r = els && els.ring && els.ring.getBoundingClientRect ? els.ring.getBoundingClientRect() : null;
+  if (r) tickBurst(r.left + r.width / 2, r.top + r.height / 2, current[0].color, 28);
   sound.ui('done');
   toast('Done: ' + current[0].title, { kind: 'ok' });
   tick(true);

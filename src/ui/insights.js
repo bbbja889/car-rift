@@ -89,7 +89,7 @@ export function renderInsights(root, analysis, { tone = 'en', onFix, onFocusBloc
       const t = (o) => (o && (o[tone] || o.en)) || '';
       const card = h('div.ins.' + ins.level, { style: { animationDelay: i * 45 + 'ms' }, onmouseenter: () => onFocusBlocks && onFocusBlocks(ins.blockIds), onmouseleave: () => onFocusBlocks && onFocusBlocks([]) },
         h('div.ins-ic', frag(icon(ins.icon))),
-        h('div', h('h4', { text: t(ins.title) }), h('p', { text: t(ins.text) }),
+        h('div', h('h3', { text: t(ins.title) }), h('p', { text: t(ins.text) }),
           ins.fix ? h('button.fix', { onclick: () => onFix(ins) }, frag(icon('sparkle')), t(ins.fix.label)) : null),
       );
       return card;
