@@ -318,3 +318,20 @@ Pure and synchronous (< 2 ms for typical plans), so it runs on every keystroke.
 ## 11. Later ideas
 Google Calendar two-way sync (needs OAuth/backend), multi-device sync via end-to-end encrypted link,
 shared family/class plans, on-device LLM for free-form parsing, widgets.
+
+---
+
+## 12. Status (v2.0 as shipped)
+
+**Done:** everything in sections 4–9 except the items below — NLP parser (EN + Hinglish), resolver, auto-scheduler,
+analyzer + Day Score + fixes, energy curves, week mode + routine merge, text-as-truth editing (drag/resize/create,
+fixes, flip AM/PM, running late, +5 min), timeline / grid / Dial 3D / week views, Focus mode (countdown, done/skip,
+ambient synth, notifications, wake lock), exports (PNG cards ×3 formats ×3 themes, .ics day + recurring week,
+share link, QR, WhatsApp text, print), history heatmap + streak, command palette, settings, backup/restore,
+PWA (offline verified), the 17-second intro film with procedural audio, the 9-section landing site,
+reduced-motion + no-WebGL fallbacks, axe-clean accessibility on landing / planner / focus.
+
+**Verified by:** 22 unit tests (`npm test`, including QR codes decoded by jsQR), a 13-step Playwright E2E
+(`npm run e2e`), frame-by-frame screenshots of the film (`?introAt=`), offline reload test, axe-core audit.
+
+**Deferred:** Pomodoro sub-cycles inside Focus mode; the "Later ideas" in section 11.

@@ -1,8 +1,9 @@
-/* KYPZER service worker — offline-first app shell.
- * Navigations: network-first (fresh deploys win), cached fallback offline.
- * Same-origin assets + Google Fonts: stale-while-revalidate.
+/* KYPZER service worker — works offline without ever mixing versions.
+ * App code (HTML/JS/CSS): network-first, cached copy when offline — a redeploy never pairs a new
+ * main.js with an old lazily-loaded module.
+ * Immutable things (vendored three.js, icons, Google Fonts): stale-while-revalidate.
  */
-const VERSION = 'kypzer-v2.0.0';
+const VERSION = 'kypzer-v2.0.1';
 const CORE = [
   './',
   './index.html',
@@ -47,6 +48,18 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+function networkFirst(request) {
+  return fetch(request)
+    .then((res) => {
+      if (res && res.ok) {
+        const copy = res.clone();
+        caches.open(VERSION).then((c) => c.put(request, copy));
+      }
+      return res;
+    })
+    .catch(() => caches.match(request));
+}
+
 function swr(request) {
   return caches.open(VERSION).then((cache) =>
     cache.match(request).then((hit) => {
@@ -77,7 +90,7 @@ self.addEventListener('fetch', (event) => {
     );
     return;
   }
-  if (url.origin === location.origin || /fonts\.(googleapis|gstatic)\.com$/.test(url.hostname)) {
-    event.respondWith(swr(req));
-  }
+  const immutable = /\/vendor\/|\/assets\//.test(url.pathname) || /fonts\.(googleapis|gstatic)\.com$/.test(url.hostname);
+  if (immutable) event.respondWith(swr(req));
+  else if (url.origin === location.origin) event.respondWith(networkFirst(req));
 });
